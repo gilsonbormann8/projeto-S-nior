@@ -1,6 +1,5 @@
 ```
 ABAP
-
 FUNCTION zfmm_teste_pocreate.
 *"----------------------------------------------------------------------
 *"*"Interface local:
@@ -13,7 +12,7 @@ FUNCTION zfmm_teste_pocreate.
 *"     VALUE(I_MATERIAL) TYPE  MATNR
 *"     VALUE(I_PRECO) TYPE  BPREI
 *"     VALUE(I_CENTRO) TYPE  EWERK
-*"     VALUE(I_CENTROCUST) TYPE  KOSTL
+*"     VALUE(I_CENTROCUST) TYPE  KOSTL OPTIONAL
 *"     VALUE(I_VLLIQUID) TYPE  BWERT
 *"     VALUE(I_CODIMPOST) TYPE  MWSKZ
 *"  EXPORTING
@@ -45,208 +44,113 @@ FUNCTION zfmm_teste_pocreate.
 *➔ Nº de endereço de entrega(EKPO - ADRN2) = 28164 (deixar fixo)
 
 
-  DATA: w_ztbposn        TYPE ztbposn,
-        header           LIKE bapimepoheader,
-        headerx          LIKE bapimepoheaderx,
-        account          LIKE bapimepoaccount OCCURS 0 WITH HEADER LINE,
-        accountx         LIKE bapimepoaccountx OCCURS 0 WITH HEADER LINE,
-        item             LIKE bapimepoitem OCCURS 0 WITH HEADER LINE,
-        itemx            LIKE bapimepoitemx OCCURS 0 WITH HEADER LINE,
-        return           LIKE bapiret2 OCCURS 0 WITH HEADER LINE,
-        pocontractlimits LIKE bapiesucc OCCURS 0 WITH HEADER LINE,
-        w_header(40)     VALUE 'PO Header',
-        purchaseorder    LIKE bapimepoheader-po_number,
-        delivery_date    LIKE bapimeposchedule-delivery_date,
-        ws_langu         LIKE sy-langu.
+  DATA: lt_return      TYPE TABLE OF bapiret2,
+        ls_return      TYPE bapiret2,
+        ls_po_header   TYPE bapimepoheader,
+        ls_po_headerx  TYPE bapimepoheaderx,
+        lt_po_items    TYPE TABLE OF bapimepoitem,
+        ls_po_item     TYPE bapimepoitem,
+        lt_po_itemx    TYPE TABLE OF bapimepoitemx,
+        ls_po_itemx    TYPE bapimepoitemx,
+        lt_po_account  TYPE TABLE OF bapimepoaccount,
+        ls_po_account  TYPE bapimepoaccount,
+        lt_po_accountx TYPE TABLE OF bapimepoaccountx,
+        ls_po_accountx TYPE bapimepoaccountx,
+        lv_po_number   TYPE bapimepoheader-po_number,
+        lt_po_text     TYPE TABLE OF bapimepotextheader,
+        ls_po_text     TYPE bapimepotextheader,
+        l_error        TYPE abap_bool.
 
-  CONSTANTS : c_x VALUE 'X'.
+* Simulação de recebimento dos dados do Sênior
+  DATA: lv_cnpj TYPE string VALUE '77644102000174'.
 
-  SELECT SINGLE bsart
-    INTO @DATA(v_bsart)
-    FROM ekko
-    WHERE bsart = @i_tp_pedido.
 
+* Buscar fornecedor pelo CNPJ
+  SELECT SINGLE lifnr INTO ls_po_header-vendor
+    FROM lfa1 WHERE stcd1 = lv_cnpj.
   IF sy-subrc <> 0.
-
-    w_ztbposn-bsart   = i_tp_pedido.
-    w_ztbposn-lifnr   = ''.
-    w_ztbposn-bukrs   = i_empresa.
-    w_ztbposn-dzbdet  = i_pagamento.
-    w_ztbposn-char255 = i_texto.
-    w_ztbposn-matnr   = i_material.
-    w_ztbposn-netpr   = i_preco.
-    w_ztbposn-werks   = i_centro.
-    w_ztbposn-kostl   = i_centrocust.
-    w_ztbposn-bwert   = i_vlliquid.
-    w_ztbposn-mwskz   = i_codimpost.
-
-
+    WRITE: 'Erro: Fornecedor não encontrado para CNPJ', lv_cnpj.
+    EXIT.
   ENDIF.
 
-*&---------------------------------------------------------------------*
-*POPULATE HEADER DATA FOR PO
-*&---------------------------------------------------------------------*
-*HEADER-COMP_CODE = sociedad .
-  header-doc_type   = i_tp_pedido .
-  header-vendor     =   i_cnpj .
-  header-creat_date = sy-datum .
-  header-created_by = sy-uname .
-  header-purch_org  = 'ekorg' .
-  header-pur_group  = 'EKGRP' .
-  header-comp_code  = i_empresa .
-  header-langu      = 'PT' .
-  header-incoterms1 = ''.
-  header-incoterms2 = ''.
+* Preencher cabeçalho do pedido
+  ls_po_header-doc_type   = i_tp_pedido.   " Tipo de Pedido
+  ls_po_header-comp_code  = i_empresa. " Empresa
+  ls_po_header-pmnttrms   = 'M305'. " Pagamento
+  ls_po_header-purch_org  = 'VOVC'. " Organização de Compras
+  ls_po_header-pur_group  = 'DAO'. " Grupo de Compradores
+  ls_po_header-incoterms1 = 'CIF'. " Incoterms 1
+  ls_po_header-incoterms2 = 'CIF'. " Incoterms 2
+  ls_po_header-vendor     = '0001129876'. "Fornecedor
 
-*HEADER-SALES_PERS = vendedor .
-*HEADER-CURRENCY = 'DOP' .
-*HEADER-ITEM_INTVL = 10 .
-*HEADER-PMNTTRMS = 'N30' .
-*HEADER-EXCH_RATE = 1 .
+* Informar quais campos foram alterados no cabeçalho
+  ls_po_headerx-doc_type   = 'X'.
+  ls_po_headerx-comp_code  = 'X'.
+  ls_po_headerx-pmnttrms   = 'X'.
+  ls_po_headerx-purch_org  = 'X'.
+  ls_po_headerx-pur_group  = 'X'.
+  ls_po_headerx-incoterms1 = 'X'.
+  ls_po_headerx-incoterms2 = 'X'.
+  ls_po_headerx-vendor     = 'X'.
 
-*&---------------------------------------------------------------------*
-*POPULATE HEADER FLAG.
-*&---------------------------------------------------------------------*
-  headerx-comp_code = c_x.
-  headerx-doc_type = c_x.
-  headerx-vendor = c_x.
-  headerx-creat_date = c_x.
-  headerx-created_by = c_x.
-  headerx-purch_org = c_x.
-  headerx-pur_group = c_x.
-  headerx-langu = c_x.
-*HEADERX-sales_pers = c_x.
-*HEADERX-CURRENCY = c_x.
-*HEADER-ITEM_INTVL = c_x.
-*HEADER-PMNTTRMS = c_x.
-*HEADER-EXCH_RATE = c_x.
-*HEADER-EXCH_RATE = c_x.
+* Preencher itens do pedido
+  ls_po_item-po_item    = '0010'.
+  ls_po_item-material   = '000000000003014708'.
+  ls_po_item-plant      = '4128'. " Centro
+  ls_po_item-quantity   = 1. " Quantidade fixa
+  ls_po_item-tax_code   = 'I0'. " Código de imposto
+  ls_po_item-costcenter = ''. "Centro de custo
+  APPEND ls_po_item TO lt_po_items.
 
-*&---------------------------------------------------------------------*
-*POPULATE ITEM DATA.
-*&---------------------------------------------------------------------*
-  item-po_item = '00010'.
-  item-quantity = '1'.
-*ITEM-MATERIAL = material .
-  item-short_text = 'prueba bapi_po_create1'.
-*ITEM-TAX_CODE = ''.
-  item-acctasscat = 'K' .
-*ITEM-ITEM_CAT = 'D' .
-  item-matl_group = '817230000' .
-  item-plant = '3001' .
-  item-trackingno = '99999'.
-  item-preq_name = 'test'.
-*ITEM-AGREEMENT = '' .
-*ITEM-AGMT_ITEM = ''.
-  item-quantity = '1' .
-  item-po_unit = 'EA'.
-*ITEM-ORDERPR_UN = 'EA'.
-  item-conv_num1 = '1'.
-  item-conv_den1 = '1'.
-  item-net_price = '1000000' .
-  item-price_unit = '1'.
-  item-gr_pr_time = '0'.
-  item-prnt_price = 'X'.
-  item-unlimited_dlv = 'X'.
-  item-gr_ind = 'X' .
-  item-ir_ind = 'X' .
-  item-gr_basediv = 'X'.
-*ITEM-PCKG_NO = '' .
+* Informar quais campos foram alterados nos itens
+  ls_po_itemx-po_item     = '00010'.
+  ls_po_itemx-material    = 'X'.
+  ls_po_itemx-plant       = 'X'.
+  ls_po_itemx-quantity    = 'X'.
+  ls_po_itemx-net_price   = 'X'.
+  ls_po_itemx-tax_code    = 'X'.
+  ls_po_itemx-costcenter  = 'X'.
+  APPEND ls_po_itemx TO lt_po_itemx.
+
+* Adicionar texto ao cabeçalho
+  ls_po_text-po_number = lv_po_number.
+  ls_po_text-text_id = 'F01'. " Identificador do texto
+  ls_po_text-text_form = '*'.
+  ls_po_text-text_line = 'Pedido gerado automaticamente'.
+  APPEND ls_po_text TO lt_po_text.
 
 
-  APPEND item. CLEAR item.
-
-*&---------------------------------------------------------------------*
-*POPULATE ITEM FLAG TABLE
-*&---------------------------------------------------------------------*
-  itemx-po_item = '00010'.
-  itemx-po_itemx = c_x.
-*ITEMX-MATERIAL = C_X.
-  itemx-short_text = c_x.
-  itemx-quantity = c_x.
-*ITEMX-TAX_CODE = C_X.
-  itemx-acctasscat = c_x.
-*ITEMX-ITEM_CAT = c_x.
-  itemx-matl_group = c_x.
-  itemx-plant = c_x.
-  itemx-trackingno = c_x.
-  itemx-preq_name = c_x.
-*ITEMX-AGREEMENT = C_X.
-*ITEMX-AGMT_ITEM = c_x.
-  itemx-stge_loc = c_x.
-  itemx-quantity = c_x.
-  itemx-po_unit = c_x.
-*ITEMX-ORDERPR_UN = C_X.
-  itemx-conv_num1 = c_x.
-  itemx-conv_den1 = c_x.
-  itemx-net_price = c_x.
-  itemx-price_unit = c_x.
-  itemx-gr_pr_time = c_x.
-  itemx-prnt_price = c_x.
-  itemx-unlimited_dlv = c_x.
-  itemx-gr_ind = c_x .
-  itemx-ir_ind = c_x .
-  itemx-gr_basediv = c_x .
-  APPEND itemx. CLEAR itemx.
-
-*&---------------------------------------------------------------------*
-*POPULATE ACCOUNT DATA.
-*&---------------------------------------------------------------------*
-  account-po_item = '00010'.
-  account-serial_no = '01' .
-  account-creat_date = sy-datum .
-  account-costcenter = i_centrocust .
-  account-gl_account = '6631400' .
-  account-gr_rcpt = 'tester'.
-  APPEND account. CLEAR account.
-
-*&---------------------------------------------------------------------*
-*POPULATE ACCOUNT FLAG TABLE.
-*&---------------------------------------------------------------------*
-  accountx-po_item = '00010'.
-  accountx-po_itemx = c_x .
-  accountx-serial_no = '01' .
-  accountx-serial_nox = c_x .
-  accountx-creat_date = c_x .
-  accountx-costcenter = c_x .
-  accountx-gl_account = c_x .
-  account-gr_rcpt = c_x.
-  APPEND accountx. CLEAR accountx.
-
-*&---------------------------------------------------------------------*
-*BAPI CALL
-*&---------------------------------------------------------------------*
-  CALL FUNCTION 'DIALOG_SET_NO_DIALOG'.
-
+* Chamar a BAPI para criar o pedido
   CALL FUNCTION 'BAPI_PO_CREATE1'
     EXPORTING
-      poheader         = header
-      poheaderx        = headerx
-    IMPORTING
-      exppurchaseorder = purchaseorder
+      poheader  = ls_po_header
+      poheaderx = ls_po_headerx
     TABLES
-      return           = return
-      poitem           = item
-      poitemx          = itemx
-      poaccount        = account
-      poaccountx       = accountx.
+      return        = lt_return
+      poitem        = lt_po_items
+      poitemx       = lt_po_itemx
+      potextheader  = lt_po_text.
 
-*&---------------------------------------------------------------------*
-*Confirm the document creation by calling database COMMIT
-*&---------------------------------------------------------------------*
+* Verificar retorno
+  LOOP AT lt_return INTO ls_return WHERE type = 'E'.
+    WRITE: 'Erro:', ls_return-message.
+    e_return = 'Erro:'.
+    CONCATENATE e_return ls_return-message INTO e_return.
+    l_error = 'X'.
+    EXIT.
+  ENDLOOP.
+
+IF l_error IS INITIAL.
+* Confirmar pedido
   CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
     EXPORTING
-      wait = 'X'
-* IMPORTING
-*     RETURN =
-    .
+      wait = 'X'.
 
-  MODIFY ztbposn FROM w_ztbposn.
-  COMMIT WORK AND WAIT.
-
-  LOOP AT return.
-    CONCATENATE e_return return-message INTO e_return SEPARATED BY space.
+   LOOP AT lt_return INTO ls_return WHERE type = 'S'.
+     e_return = ls_return-message.
   ENDLOOP.
+
+ENDIF.
 
 ENDFUNCTION.
 ```
