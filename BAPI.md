@@ -1,248 +1,133 @@
 ```ABAP
 
-*&---------------------------------------------------------------------*
+&---------------------------------------------------------------------*
 *& Report Z_TESTE_PO_CREATE_GBA
 *&---------------------------------------------------------------------*
 *&
 *&---------------------------------------------------------------------*
-REPORT Z_TESTE_PO_CREATE_GBA.
-*DATA DECLARATION
-constants : c_x value 'X'.
+REPORT z_teste_po_create_gba.
 
-*Structures to hold PO header data
-data : header like bapimepoheader ,
-headerx like bapimepoheaderx .
+DATA: lt_return      TYPE TABLE OF bapiret2,
+      ls_return      TYPE bapiret2,
+      ls_po_header   TYPE bapimepoheader,
+      ls_po_headerx  TYPE bapimepoheaderx,
+      lt_po_items    TYPE TABLE OF bapimepoitem,
+      ls_po_item     TYPE bapimepoitem,
+      lt_po_itemx    TYPE TABLE OF bapimepoitemx,
+      ls_po_itemx    TYPE bapimepoitemx,
+      lt_po_account  TYPE TABLE OF bapimepoaccount,
+      ls_po_account  TYPE bapimepoaccount,
+      lt_po_accountx TYPE TABLE OF bapimepoaccountx,
+      ls_po_accountx TYPE bapimepoaccountx,
+      lv_po_number   TYPE bapimepoheader-po_number.
 
-*Structures to hold PO account data
-data : account like bapimepoaccount occurs 0 with header line ,
-accountx like bapimepoaccountx occurs 0 with header line .
-
-*Internal Tables to hold PO ITEM DATA
-data : item like bapimepoitem occurs 0 with header line,
-itemx like bapimepoitemx occurs 0 with header line,
-
-*Internal table to hold messages from BAPI call
-return like bapiret2 occurs 0 with header line,
-
-*Internal table to hold messages from BAPI call
-pocontractlimits like bapiesucc occurs 0 with header line.
-
-data : w_header(40) value 'PO Header',
-purchaseorder like bapimepoheader-po_number,
-delivery_date like bapimeposchedule-delivery_date.
-
-data : ws_langu like sy-langu.
-
-*text-001 = 'PO Header' - define as text element
-selection-screen begin of block b1 with frame title text-001.
-parameters : company like header-comp_code default '122' ,
-doctyp like header-doc_type default 'NB' ,
-cdate like header-creat_date default sy-datum ,
-vendor like header-vendor default '2000000012' ,
-pur_org like header-purch_org default 'PU01' ,
-pur_grp like header-pur_group default '005' .
-*sociedad like HEADER-COMP_CODE default '122' ,
-*vendedor like HEADER-SALES_PERS default 'sale person'.
+* Simulação de recebimento dos dados do Sênior
+DATA: lv_cnpj TYPE string VALUE '77644102000174'.
 
 
-selection-screen end of block b1.
+* Buscar fornecedor pelo CNPJ
+SELECT SINGLE lifnr INTO ls_po_header-vendor
+  FROM lfa1 WHERE stcd1 = lv_cnpj.
+IF sy-subrc <> 0.
+  WRITE: 'Erro: Fornecedor não encontrado para CNPJ', lv_cnpj.
+  EXIT.
+ENDIF.
 
-selection-screen begin of block b2 with frame title text-002.
-parameters : item_num like item-po_item default '00010',
-material like item-material default '12000000' ,
-tipo_imp like item-acctasscat default 'K' ,
-*pos_doc like ITEM-ITEM_CAT default 'F' ,
-shorttxt like item-short_text default 'PRUEBA BAPI' ,
-grup_art like item-matl_group default '817230000' ,
-plant like item-plant default '3001' ,
-mpe like item-trackingno default '9999' ,
-*contrato like ITEM-AGREEMENT default '4904000003' ,
-*quantity like ITEM-QUANTITY default 1 .
-po_unit like item-po_unit default 'EA'.
+* Preencher cabeçalho do pedido
+ls_po_header-doc_type   = 'Z4CP'.   " Tipo de Pedido
+ls_po_header-comp_code  = '4014'. " Empresa
+ls_po_header-pmnttrms   = 'M305'. " Pagamento
+ls_po_header-purch_org  = 'VOVC'. " Organização de Compras
+ls_po_header-pur_group  = 'DAO'. " Grupo de Compradores
+ls_po_header-incoterms1 = 'CIF'. " Incoterms 1
+ls_po_header-incoterms2 = 'CIF'. " Incoterms 2
+ls_po_header-vendor     = '0001129876'. "Fornecedor
 
-selection-screen end of block b2.
+* Informar quais campos foram alterados no cabeçalho
+ls_po_headerx-doc_type   = 'X'.
+ls_po_headerx-comp_code  = 'X'.
+ls_po_headerx-pmnttrms   = 'X'.
+ls_po_headerx-purch_org  = 'X'.
+ls_po_headerx-pur_group  = 'X'.
+ls_po_headerx-incoterms1 = 'X'.
+ls_po_headerx-incoterms2 = 'X'.
+ls_po_headerx-vendor     = 'X'.
 
-* Par?mnetros de imputaci?n
-selection-screen begin of block b3 with frame title text-004.
-parameters : centro like account-costcenter default '1220813150',
-cuenta like account-gl_account default '6631400' ,
-num_pos like account-po_item default '10' ,
-serial like account-serial_no default '01' ,
-ind_imp like account-tax_code default 'I2' .
+* Preencher itens do pedido
+ls_po_item-po_item    = '0010'.
+ls_po_item-material   = '000000000003014708'.
+ls_po_item-plant      = '4128'. " Centro
+ls_po_item-quantity   = 1. " Quantidade fixa
+ls_po_item-tax_code   = 'I0'. " Código de imposto
+APPEND ls_po_item TO lt_po_items.
 
-selection-screen end of block b3.
-
-
-*&---------------------------------------------------------------------*
-start-of-selection.
-*&---------------------------------------------------------------------*
-*DATA POPULATION
-*&---------------------------------------------------------------------*
-  ws_langu = sy-langu. "Language variable
-
-*POPULATE HEADER DATA FOR PO
-*HEADER-COMP_CODE = sociedad .
-  header-doc_type = doctyp .
-  header-vendor = vendor .
-  header-creat_date = cdate .
-  header-created_by = 'TD17191' .
-  header-purch_org = pur_org .
-  header-pur_group = pur_grp .
-  header-comp_code = company .
-  header-langu = ws_langu .
-*HEADER-SALES_PERS = vendedor .
-*HEADER-CURRENCY = 'DOP' .
-*HEADER-ITEM_INTVL = 10 .
-*HEADER-PMNTTRMS = 'N30' .
-*HEADER-EXCH_RATE = 1 .
+* Informar quais campos foram alterados nos itens
+ls_po_itemx-po_item   = '00010'.
+ls_po_itemx-material  = 'X'.
+ls_po_itemx-plant     = 'X'.
+ls_po_itemx-quantity  = 'X'.
+ls_po_itemx-net_price = 'X'.
+ls_po_itemx-tax_code  = 'X'.
+APPEND ls_po_itemx TO lt_po_itemx.
 
 
-*&---------------------------------------------------------------------*
-*POPULATE HEADER FLAG.
-*&---------------------------------------------------------------------*
-  headerx-comp_code = c_x.
-  headerx-doc_type = c_x.
-  headerx-vendor = c_x.
-  headerx-creat_date = c_x.
-  headerx-created_by = c_x.
-  headerx-purch_org = c_x.
-  headerx-pur_group = c_x.
-  headerx-langu = c_x.
-*HEADERX-sales_pers = c_x.
-*HEADERX-CURRENCY = c_x.
-*HEADER-ITEM_INTVL = c_x.
-*HEADER-PMNTTRMS = c_x.
-*HEADER-EXCH_RATE = c_x.
-*HEADER-EXCH_RATE = c_x.
+* Chamar a BAPI para criar o pedido
+CALL FUNCTION 'BAPI_PO_CREATE1'
+  EXPORTING
+    poheader  = ls_po_header
+    poheaderx = ls_po_headerx
+  TABLES
+    return    = lt_return
+    poitem    = lt_po_items
+    poitemx   = lt_po_itemx.
 
-*&---------------------------------------------------------------------*
-*POPULATE ITEM DATA.
-*&---------------------------------------------------------------------*
-  item-po_item = item_num.
-  item-quantity = '1'.
-*ITEM-MATERIAL = material .
-  item-short_text = 'prueba bapi_po_create1'.
-*ITEM-TAX_CODE = ''.
-  item-acctasscat = 'K' .
-*ITEM-ITEM_CAT = 'D' .
-  item-matl_group = '817230000' .
-  item-plant = '3001' .
-  item-trackingno = '99999'.
-  item-preq_name = 'test'.
-*ITEM-AGREEMENT = '' .
-*ITEM-AGMT_ITEM = ''.
-  item-quantity = '1' .
-  item-po_unit = 'EA'.
-*ITEM-ORDERPR_UN = 'EA'.
-  item-conv_num1 = '1'.
-  item-conv_den1 = '1'.
-  item-net_price = '1000000' .
-  item-price_unit = '1'.
-  item-gr_pr_time = '0'.
-  item-prnt_price = 'X'.
-  item-unlimited_dlv = 'X'.
-  item-gr_ind = 'X' .
-  item-ir_ind = 'X' .
-  item-gr_basediv = 'X'.
-*ITEM-PCKG_NO = '' .
+* Verificar retorno
+LOOP AT lt_return INTO ls_return WHERE type = 'E'.
+  WRITE: 'Erro:', ls_return-message.
+  EXIT.
+ENDLOOP.
 
+* Confirmar pedido
+CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+  EXPORTING
+    wait = 'X'.
 
-  append item. clear item.
+* Obter número do pedido gerado
+SELECT  ebeln INTO lv_po_number
+  FROM ekko
+  WHERE lifnr = ls_po_header-vendor
+  ORDER BY ebeln DESCENDING.
+ENDSELECT.
 
-*&---------------------------------------------------------------------*
-*POPULATE ITEM FLAG TABLE
-*&---------------------------------------------------------------------*
-  itemx-po_item = item_num.
-  itemx-po_itemx = c_x.
-*ITEMX-MATERIAL = C_X.
-  itemx-short_text = c_x.
-  itemx-quantity = c_x.
-*ITEMX-TAX_CODE = C_X.
-  itemx-acctasscat = c_x.
-*ITEMX-ITEM_CAT = c_x.
-  itemx-matl_group = c_x.
-  itemx-plant = c_x.
-  itemx-trackingno = c_x.
-  itemx-preq_name = c_x.
-*ITEMX-AGREEMENT = C_X.
-*ITEMX-AGMT_ITEM = c_x.
-  itemx-stge_loc = c_x.
-  itemx-quantity = c_x.
-  itemx-po_unit = c_x.
-*ITEMX-ORDERPR_UN = C_X.
-  itemx-conv_num1 = c_x.
-  itemx-conv_den1 = c_x.
-  itemx-net_price = c_x.
-  itemx-price_unit = c_x.
-  itemx-gr_pr_time = c_x.
-  itemx-prnt_price = c_x.
-  itemx-unlimited_dlv = c_x.
-  itemx-gr_ind = c_x .
-  itemx-ir_ind = c_x .
-  itemx-gr_basediv = c_x .
-  append itemx. clear itemx.
+IF lv_po_number IS NOT INITIAL.
 
-*&---------------------------------------------------------------------*
-*POPULATE ACCOUNT DATA.
-*&---------------------------------------------------------------------*
-  account-po_item = item_num.
-  account-serial_no = serial .
-  account-creat_date = sy-datum .
-  account-costcenter = centro .
-  account-gl_account = cuenta .
-  account-gr_rcpt = 'tester'.
-  append account. clear account.
+  DATA: lt_po_text TYPE TABLE OF bapimepotext,
+        ls_po_text TYPE bapimepotext.
 
-*&---------------------------------------------------------------------*
-*POPULATE ACCOUNT FLAG TABLE.
-*&---------------------------------------------------------------------*
-  accountx-po_item = item_num .
-  accountx-po_itemx = c_x .
-  accountx-serial_no = serial .
-  accountx-serial_nox = c_x .
-  accountx-creat_date = c_x .
-  accountx-costcenter = c_x .
-  accountx-gl_account = c_x .
-  account-gr_rcpt = c_x.
-  append accountx. clear accountx.
+* Adicionar texto ao cabeçalho
+  ls_po_text-po_number = lv_po_number.
+  ls_po_text-text_id = 'F01'. " Identificador do texto
+  ls_po_text-text_form = '*'.
+  ls_po_text-text_line = 'Pedido gerado automaticamente'.
+  APPEND ls_po_text TO lt_po_text.
 
+* Chamar a BAPI para modificar o pedido e adicionar o texto
+  CALL FUNCTION 'BAPI_PO_CHANGE'
+    EXPORTING
+      purchaseorder = lv_po_number
+    TABLES
+      return        = lt_return
+      potextheader  = lt_po_text.
 
-*&---------------------------------------------------------------------*
-*BAPI CALL
-*&---------------------------------------------------------------------*
-  call function 'DIALOG_SET_NO_DIALOG'.
+* Confirmar alteração
+  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+    EXPORTING
+      wait = 'X'.
 
-  call function 'BAPI_PO_CREATE1'
-    exporting
-      poheader         = header
-      poheaderx        = headerx
-    importing
-      exppurchaseorder = purchaseorder
-    tables
-      return           = return
-      poitem           = item
-      poitemx          = itemx
-      poaccount        = account
-      poaccountx       = accountx.
+  WRITE: 'Pedido criado com sucesso:', lv_po_number.
 
-
-*&---------------------------------------------------------------------*
-*Confirm the document creation by calling database COMMIT
-*&---------------------------------------------------------------------*
-  call function 'BAPI_TRANSACTION_COMMIT'
-  exporting
-  wait = 'X'
-* IMPORTING
-* RETURN =
-  .
-
-end-of-selection.
-*&---------------------------------------------------------------------*
-*Output the messages returned from BAPI call
-*&---------------------------------------------------------------------*
-  loop at return.
-    write / return-message.
-  endloop.
-
+ELSE.
+  WRITE: 'Erro ao criar pedido'.
+ENDIF.
 
 ```
