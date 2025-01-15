@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions targetNamespace="urn:sap-com:document:sap:rfc:functions" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsoap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="urn:sap-com:document:sap:rfc:functions">
+	<wsdl:documentation>
+		<sidl:sidl xmlns:sidl="http://www.sap.com/2007/03/sidl"/>
+	</wsdl:documentation>
+	<wsdl:types>
+		<xsd:schema attributeFormDefault="qualified" targetNamespace="urn:sap-com:document:sap:rfc:functions">
+			<xsd:simpleType name="char10">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="10"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="char14">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="14"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="char18">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="18"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="char2">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="2"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="char255">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="255"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="char4">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="4"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="curr11.2">
+				<xsd:restriction base="xsd:decimal">
+					<xsd:totalDigits value="11"/>
+					<xsd:fractionDigits value="2"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="curr13.2">
+				<xsd:restriction base="xsd:decimal">
+					<xsd:totalDigits value="13"/>
+					<xsd:fractionDigits value="2"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="decimal3.0">
+				<xsd:restriction base="xsd:decimal">
+					<xsd:totalDigits value="3"/>
+					<xsd:fractionDigits value="0"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="numeric5">
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="5"/>
+					<xsd:pattern value="\d*"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:simpleType name="quantum13.3">
+				<xsd:restriction base="xsd:decimal">
+					<xsd:totalDigits value="13"/>
+					<xsd:fractionDigits value="3"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+			<xsd:complexType name="ZVMM_ITEM_PO">
+				<xsd:sequence>
+					<xsd:element name="PO_ITEM" type="tns:numeric5"/>
+					<xsd:element name="MATERIAL" type="tns:char18"/>
+					<xsd:element name="PLANT" type="tns:char4"/>
+					<xsd:element name="QUANTITY" type="tns:quantum13.3"/>
+					<xsd:element name="TAX_CODE" type="tns:char2"/>
+					<xsd:element name="COSTCENTER" type="tns:char10"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="TABLE_OF_ZVMM_ITEM_PO">
+				<xsd:sequence>
+					<xsd:element name="item" type="tns:ZVMM_ITEM_PO" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:element name="ZFMM_TESTE_POCREATE">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="I_CNPJ" type="tns:char14"/>
+						<xsd:element name="I_EMPRESA" type="tns:char4"/>
+						<xsd:element name="I_NUM_PEDIDO" type="tns:char10" minOccurs="0"/>
+						<xsd:element name="I_PAGAMENTO" type="tns:decimal3.0"/>
+						<xsd:element name="I_PRECO" type="tns:curr11.2"/>
+						<xsd:element name="I_TEXTO" type="tns:char255"/>
+						<xsd:element name="I_TP_PEDIDO" type="tns:char4"/>
+						<xsd:element name="I_VLLIQUID" type="tns:curr13.2"/>
+						<xsd:element name="T_ITEM" type="tns:TABLE_OF_ZVMM_ITEM_PO" minOccurs="0"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="ZFMM_TESTE_POCREATEResponse">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="E_RETURN" type="tns:char255"/>
+						<xsd:element name="T_ITEM" type="tns:TABLE_OF_ZVMM_ITEM_PO" minOccurs="0"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:schema>
+	</wsdl:types>
+	<wsdl:message name="ZFMM_TESTE_POCREATE">
+		<wsdl:part name="parameters" element="tns:ZFMM_TESTE_POCREATE"/>
+	</wsdl:message>
+	<wsdl:message name="ZFMM_TESTE_POCREATEResponse">
+		<wsdl:part name="parameter" element="tns:ZFMM_TESTE_POCREATEResponse"/>
+	</wsdl:message>
+	<wsdl:portType name="Z_TESTE_POCREATE_02">
+		<wsdl:operation name="ZFMM_TESTE_POCREATE">
+			<wsdl:input message="tns:ZFMM_TESTE_POCREATE"/>
+			<wsdl:output message="tns:ZFMM_TESTE_POCREATEResponse"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="binding" type="tns:Z_TESTE_POCREATE_02">
+		<soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+		<wsdl:operation name="ZFMM_TESTE_POCREATE">
+			<soap:operation soapAction="urn:sap-com:document:sap:rfc:functions:Z_TESTE_POCREATE_02:ZFMM_TESTE_POCREATERequest" style="document"/>
+			<wsdl:input>
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="service">
+		<wsdl:port name="binding" binding="tns:binding">
+			<soap:address location="http://vide0301.votorantim.grupo:8003/sap/bc/srt/scs/sap/z_teste_pocreate_02?sap-client=150"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
