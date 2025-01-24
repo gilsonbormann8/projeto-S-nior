@@ -1,0 +1,1911 @@
+*-----------------------------------------------------------------------
+* Empresa..: GL
+* ID.......: -
+* Programa.: ZGLRMM0601_RELATORIO_NF_SERV
+* Tipo.....: Report
+* Módulo...: MM
+* Transação:
+* Descrição: Relatório Servico-Pedido x MIRO X Reinf
+* Autor....: Gilson Bormann Arruda TGILSONBA / Renata Teixeira TRENATAT
+* Data.....: 29/06/2023
+* User Exit:
+*
+* [HISTÓRICO]
+* ======== ========== ========== =======================================
+* Data Autor Request Descrição
+* ======== ========== ========== =======================================
+* dd/mm/aa XXXXXXXXXX xxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+* ======== ========== ========== =======================================
+*
+*----------------------------------------------------------------------
+REPORT zglrmm0601_relatorio_nf_serv.
+
+TABLES: rbkp,  rseg, ekko, bkpf, j_1bnfdoc, j_1bnflin.
+*==================================================================================================================================================*
+*types globais
+*==================================================================================================================================================*
+TYPES: BEGIN OF y_alv,
+         bukrs             TYPE rbkp-bukrs, "obrigatorio
+         werks             TYPE rseg-werks, "obrigatorio
+         belnr             TYPE rbkp-belnr, "obrigatorio
+         gjahr             TYPE rbkp-gjahr, "obrigatorio
+         docnum            TYPE j_1bnfdoc-docnum, "obrigatorio
+         lifnr             TYPE rbkp-lifnr, "obrigatorio
+         xblnr             TYPE rbkp-xblnr, "obrigatorio
+         bldat             TYPE rbkp-bldat, "obrigatorio
+         budat             TYPE rbkp-budat, "obrigatorio
+         stblg             TYPE rbkp-stblg, "obrigatorio
+         ebeln             TYPE ekko-ebeln, "obrigatorio
+         belnr2            TYPE bkpf-belnr, "obrigatorio
+         j_1bnftype        TYPE rbkp-j_1bnftype, "obrigatorio
+         usnam             TYPE rbkp-usnam, "obrigatorio
+         regio             TYPE lfa1-regio, "relatorio Miro
+         ort01             TYPE lfa1-ort01, "relatorio Miro
+         blart             TYPE rbkp-blart, "relatorio Miro
+         xml_chv           TYPE ztbmm_nf_forn_cb-xml_chave_nfe, "relatorio Miro
+         rmwwr             TYPE rbkp-rmwwr, "relatorio Miro
+         bktxt             TYPE rbkp-bktxt, "relatorio Miro
+         sgtxt             TYPE rbkp-sgtxt, "relatorio Miro
+         gsber             TYPE rbkp-gsber, "relatorio Miro
+         matnr             TYPE rseg-matnr, "relatorio Miro
+         maktx             TYPE makt-maktx, "relatorio Miro
+         mwskz             TYPE rbkp-mwskz1, "relatorio Miro
+         wrbtr             TYPE rseg-wrbtr,  "relatorio Miro
+         zterm             TYPE ekko-zterm, "relatorio Miro
+         zbd1t             TYPE rbkp-zbd1t, "relatorio Miro
+         zfbdt             TYPE rbkp-zfbdt, "relatorio Miro
+         brcde             TYPE brcde,      "relatorio Miro
+         cfop              TYPE j_1bnflin-cfop,   "relatorio Miro
+         srvnr             TYPE j_1bnflin-srvnr,  "relatorio Miro
+         taxsi5            TYPE j_1bnflin-taxsi5, "relatorio Miro
+         taxs14            TYPE j_1bnflin-taxsi4, "relatorio Miro
+         nbm               TYPE j_1bnflin-nbm, "relatorio Miro
+         regio_2           TYPE lfa1-regio, "relatorio pedico de comp
+         ort01_2           TYPE t001w-ort01, "relatorio pedico de comp
+         lifnr2            TYPE t001w-lifnr, "relatorio pedico de comp
+         ernam             TYPE ekko-ernam,  "relatorio pedico de comp
+         bsart             TYPE ekko-bsart,  "relatorio pedico de comp
+         ebelp             TYPE ekpo-ebelp,  "relatorio pedico de comp
+         txz01             TYPE ekpo-txz01,  "relatorio pedico de comp
+         netpr             TYPE ekpo-netpr,  "relatorio pedico de comp
+         zterm2            TYPE ekko-zterm,  "relatorio pedico de comp
+         mwskz2            TYPE ekpo-mwskz,  "relatorio pedico de comp
+         kostl             TYPE ekkn-kostl,  "relatorio pedico de comp
+         lblni             TYPE essr-lblni,  "relatorio pedico de comp
+         erdat             TYPE essr-erdat,  "relatorio pedico de comp
+         ernam2            TYPE essr-ernam,  "relatorio pedico de comp
+         lwert             TYPE essr-lwert,  "relatorio pedico de comp
+         augbl             TYPE bseg-augbl,  "relatorio financeiro
+         stblg2            TYPE bkpf-stblg,  "relatorio financeiro
+         witht             TYPE with_item-witht, "relatorio financeiro
+         wt_withcd         TYPE with_item-wt_withcd, "relatorio financeiro
+         wt_qsshh          TYPE with_item-wt_qsshh,  "relatorio financeiro
+         wt_qbshb          TYPE with_item-wt_qbshb,  "relatorio financeiro
+         base              TYPE j_1bnfstx-base,      "relatorio financeiro
+         rate              TYPE j_1bnfstx-rate,      "relatorio financeiro
+         taxval            TYPE j_1bnfstx-taxval,    "relatorio financeiro
+         tpservico         TYPE zreinf_r2010info-tpservico, "relatorio reinf
+         vlrbruto          TYPE zreinf_r2010info-vlrbruto,  "relatorio reinf
+         vlbaseret         TYPE zreinf_r2010info-vlbaseret, "relatorio reinf
+         vlrretencao       TYPE zreinf_r2010info-vlrretencao, "relatorio reinf
+         vlrretsub         TYPE zreinf_r2010info-vlrretsub,   "relatorio reinf
+         vlrnretprinc      TYPE zreinf_r2010info-vlrnretprinc, "relatorio reinf
+         nrprocretprinc    TYPE zreinf_r2010info-nrprocretprinc, "relatorio reinf
+         vlrservicos15     TYPE zreinf_r2010info-vlrservicos15, "relatorio reinf
+         vlrservicos20     TYPE zreinf_r2010info-vlrservicos20, "relatorio reinf
+         vlrservicos25     TYPE zreinf_r2010info-vlrservicos25, "relatorio reinf
+         vlradicional      TYPE zreinf_r2010info-vlradicional, "relatorio reinf
+         cno               TYPE zreinf_r2010info-cno, "relatorio reinf
+         tpcno             TYPE zreinf_r2010info-tpcno, "relatorio reinf
+         vlrbaseretir      TYPE zreinf_r2010info-vlrbaseretir, "relatorio reinf
+         vlrretencaoir     TYPE zreinf_r2010info-vlrretencaoir, "relatorio reinf
+         vlrnretir         TYPE zreinf_r2010info-vlrnretir,     "relatorio reinf
+         nrprocretir       TYPE zreinf_r2010info-nrprocretir,   "relatorio reinf
+         vlbaseretpis      TYPE zreinf_r2010info-vlbaseretpis,  "relatorio reinf
+         vlrretencaopis    TYPE zreinf_r2010info-vlrretencaopis, "relatorio reinf
+         vlrnretpis        TYPE zreinf_r2010info-vlrnretpis,    "relatorio reinf
+         nrprocretbasepis  TYPE zreinf_r2010info-nrprocretbasepis, "relatorio reinf
+         nrprocretpis      TYPE zreinf_r2010info-nrprocretpis,     "relatorio reinf
+         vlbaseretcof      TYPE zreinf_r2010info-vlbaseretcof,     "relatorio reinf
+         vlrretencaocof    TYPE zreinf_r2010info-vlrretencaocof,   "relatorio reinf
+         vlrnretcof        TYPE zreinf_r2010info-vlrnretcof,       "relatorio reinf
+         nrprocretbasecof  TYPE zreinf_r2010info-nrprocretbasecof, "relatorio reinf
+         nrprocretcof      TYPE zreinf_r2010info-nrprocretcof,     "relatorio reinf
+         vlbaseretcsll     TYPE zreinf_r2010info-vlbaseretcsll,    "relatorio reinf
+         vlrretencaocsll   TYPE zreinf_r2010info-vlrretencaocsll,  "relatorio reinf
+         vlrnretcsll       TYPE zreinf_r2010info-vlrnretcsll,      "relatorio reinf
+         nrprocretbasecsll TYPE zreinf_r2010info-nrprocretbasecsll, "relatorio reinf
+         nrprocretcsll     TYPE zreinf_r2010info-nrprocretcsll,    "relatorio reinf
+       END OF y_alv,
+
+       BEGIN OF y_rbkp,
+         bukrs      TYPE  rbkp-bukrs,
+         belnr      TYPE  rbkp-belnr,
+         gjahr      TYPE  rbkp-gjahr,
+         lifnr      TYPE  rbkp-lifnr,
+         xblnr      TYPE  rbkp-xblnr,
+         bldat      TYPE  rbkp-bldat,
+         budat      TYPE  rbkp-budat,
+         stblg      TYPE  rbkp-stblg,
+         j_1bnftype TYPE  rbkp-j_1bnftype,
+         usnam      TYPE  rbkp-usnam,
+         blart      TYPE  rbkp-blart,
+         rmwwr      TYPE  rbkp-rmwwr,
+         bktxt      TYPE  rbkp-bktxt,
+         sgtxt      TYPE  rbkp-sgtxt,
+         gsber      TYPE  rbkp-gsber,
+         mwskz      TYPE  rbkp-mwskz1,
+         zterm      TYPE  rbkp-zterm,
+         zbd1t      TYPE  rbkp-zbd1t,
+         zfbdt      TYPE  rbkp-zfbdt,
+         esrre      TYPE  rbkp-esrre,
+         esrnr      TYPE  rbkp-esrnr,
+         esrpz      TYPE  rbkp-esrpz,
+         awkey      TYPE  bkpf-awkey,
+       END OF y_rbkp,
+
+       BEGIN OF y_rseg,
+         belnr TYPE  rseg-belnr,
+         ebeln TYPE  rseg-ebeln,
+         ebelp TYPE  rseg-ebelp,
+         werks TYPE  rseg-werks,
+         matnr TYPE  rseg-matnr,
+         wrbtr TYPE  rseg-wrbtr,
+       END OF y_rseg,
+
+       BEGIN OF y_t001w,
+         werks TYPE  t001w-werks,
+         regio TYPE  t001w-regio,
+         ort01 TYPE  t001w-ort01,
+       END OF y_t001w,
+
+       BEGIN OF y_ekkn,
+         ebeln TYPE  ekkn-ebeln,
+         kostl TYPE  ekkn-kostl,
+       END OF y_ekkn,
+
+       BEGIN OF y_ekko,
+         ebeln TYPE  ekko-ebeln,
+         aedat TYPE  ekko-aedat,
+         lifnr TYPE  ekko-lifnr,
+         ernam TYPE  ekko-ernam,
+         bsart TYPE  ekko-bsart,
+         zterm TYPE  ekko-zterm,
+       END OF y_ekko,
+
+       BEGIN OF y_ekpo,
+         ebeln TYPE  ekpo-ebeln,
+         ebelp TYPE  ekpo-ebelp,
+         werks TYPE  ekpo-werks,
+         txz01 TYPE  ekpo-txz01,
+         mwskz TYPE  ekpo-mwskz,
+         netpr TYPE  ekpo-netpr,
+       END OF y_ekpo,
+
+       BEGIN OF y_essr,
+         ebeln TYPE  essr-ebeln,
+         ebelp TYPE  essr-ebelp,
+         lblni TYPE  essr-lblni,
+         erdat TYPE  essr-erdat,
+         ernam TYPE  essr-ernam,
+         lwert TYPE  essr-lwert,
+       END OF y_essr,
+
+       BEGIN OF y_j_1bnfdoc,
+         belnr  TYPE  j_1bnfdoc-belnr,
+         docnum TYPE  j_1bnfdoc-docnum,
+       END OF y_j_1bnfdoc,
+
+       BEGIN OF y_j_1bnflin,
+         docnum TYPE  j_1bnflin-docnum,
+         cfop   TYPE  j_1bnflin-cfop,
+         srvnr  TYPE  j_1bnflin-srvnr,
+         taxsi5 TYPE  j_1bnflin-taxsi5,
+         taxsi4 TYPE  j_1bnflin-taxsi4,
+         nbm    TYPE  j_1bnflin-nbm,
+       END OF y_j_1bnflin,
+
+       BEGIN OF y_j_1bnfstx,
+         docnum TYPE  j_1bnfstx-docnum,
+         base   TYPE  j_1bnfstx-base,
+         rate   TYPE  j_1bnfstx-rate,
+         taxval TYPE  j_1bnfstx-taxval,
+       END OF y_j_1bnfstx,
+
+       BEGIN OF y_lfa1,
+         lifnr TYPE  lfa1-lifnr,
+         regio TYPE  lfa1-regio,
+         ort01 TYPE  lfa1-ort01,
+       END OF y_lfa1,
+
+       BEGIN OF y_makt,
+         matnr TYPE  makt-matnr,
+         maktx TYPE  makt-maktx,
+       END OF y_makt,
+
+       BEGIN OF y_with_item,
+         belnr     TYPE  with_item-belnr,
+         witht     TYPE  with_item-witht,
+         wt_withcd TYPE  with_item-wt_withcd,
+         wt_qsshh  TYPE  with_item-wt_qsshh,
+         wt_qbshb  TYPE  with_item-wt_qbshb,
+         wt_qbshh  TYPE  with_item-wt_qbshh,
+         wt_qsfhh  TYPE  with_item-wt_qsfhh,
+       END OF y_with_item,
+
+       BEGIN OF y_zreinf,
+         belnr             TYPE  zreinf_r2010info-belnr,
+         tpservico         TYPE  zreinf_r2010info-tpservico,
+         vlrbruto          TYPE  zreinf_r2010info-vlrbruto,
+         vlbaseret         TYPE  zreinf_r2010info-vlbaseret,
+         vlrretencao       TYPE  zreinf_r2010info-vlrretencao,
+         vlrretsub         TYPE  zreinf_r2010info-vlrretsub,
+         vlrnretprinc      TYPE  zreinf_r2010info-vlrnretprinc,
+         nrprocretprinc    TYPE  zreinf_r2010info-nrprocretprinc,
+         vlrservicos15     TYPE  zreinf_r2010info-vlrservicos15,
+         vlrservicos20     TYPE  zreinf_r2010info-vlrservicos20,
+         vlrservicos25     TYPE  zreinf_r2010info-vlrservicos25,
+         vlradicional      TYPE  zreinf_r2010info-vlradicional,
+         cno               TYPE  zreinf_r2010info-cno,
+         tpcno             TYPE  zreinf_r2010info-tpcno,
+         vlrbaseretir      TYPE  zreinf_r2010info-vlrbaseretir,
+         vlrretencaoir     TYPE  zreinf_r2010info-vlrretencaoir,
+         vlrnretir         TYPE  zreinf_r2010info-vlrnretir,
+         nrprocretir       TYPE  zreinf_r2010info-nrprocretir,
+         vlbaseretpis      TYPE  zreinf_r2010info-vlbaseretpis,
+         vlrretencaopis    TYPE  zreinf_r2010info-vlrretencaopis,
+         vlrnretpis        TYPE  zreinf_r2010info-vlrnretpis,
+         nrprocretbasepis  TYPE  zreinf_r2010info-nrprocretbasepis,
+         nrprocretpis      TYPE  zreinf_r2010info-nrprocretpis,
+         vlbaseretcof      TYPE  zreinf_r2010info-vlbaseretcof,
+         vlrretencaocof    TYPE  zreinf_r2010info-vlrretencaocof,
+         vlrnretcof        TYPE  zreinf_r2010info-vlrnretcof,
+         nrprocretbasecof  TYPE  zreinf_r2010info-nrprocretbasecof,
+         nrprocretcof      TYPE  zreinf_r2010info-nrprocretcof,
+         vlbaseretcsll     TYPE  zreinf_r2010info-vlbaseretcsll,
+         vlrretencaocsll   TYPE  zreinf_r2010info-vlrretencaocsll,
+         vlrnretcsll       TYPE  zreinf_r2010info-vlrnretcsll,
+         nrprocretbasecsll TYPE  zreinf_r2010info-nrprocretbasecsll,
+         nrprocretcsll     TYPE  zreinf_r2010info-nrprocretcsll,
+       END OF y_zreinf,
+
+       BEGIN OF y_znf_forn,
+         belnr         TYPE  ztbmm_nf_forn_cb-belnr,
+         xml_chave_nfe TYPE  ztbmm_nf_forn_cb-xml_chave_nfe,
+       END OF y_znf_forn,
+
+       BEGIN OF y_bseg,
+         belnr TYPE  bseg-belnr,
+         augbl TYPE  bseg-augbl,
+         gsber TYPE  bseg-gsber,
+       END OF y_bseg,
+
+       BEGIN OF y_bkpf,
+         belnr TYPE  bkpf-belnr,
+         stblg TYPE  bkpf-stblg,
+         awkey TYPE  bkpf-awkey,
+       END OF y_bkpf.
+
+*==================================================================================================================================================*
+*tabelas globais
+*==================================================================================================================================================*
+DATA: t_alv         TYPE TABLE OF y_alv,
+      t_rbkp        TYPE TABLE OF y_rbkp,
+      t_rseg        TYPE TABLE OF y_rseg,
+      t_j1bnfdoc    TYPE TABLE OF y_j_1bnfdoc,
+      t_ekko        TYPE TABLE OF y_ekko,
+      t_bkpf        TYPE TABLE OF y_bkpf,
+      t_lfa1        TYPE TABLE OF y_lfa1,
+      t_xml         TYPE TABLE OF y_znf_forn,
+      t_makt        TYPE TABLE OF y_makt,
+      t_j1bnflin    TYPE TABLE OF y_j_1bnflin,
+      t_ekpo        TYPE TABLE OF y_ekpo,
+      t_t001w       TYPE TABLE OF y_t001w,
+      t_ekkn        TYPE TABLE OF y_ekkn,
+      t_essr        TYPE TABLE OF y_essr,
+      t_with_item   TYPE TABLE OF y_with_item,
+      t_j1bnfstx    TYPE TABLE OF y_j_1bnfstx,
+      t_zreinf      TYPE TABLE OF y_zreinf,
+      t_bseg        TYPE TABLE OF y_bseg,
+*==================================================================================================================================================*
+*work area globais
+*==================================================================================================================================================*
+      w_alv         TYPE y_alv,
+      w_rbkp        TYPE y_rbkp,
+      w_rseg        TYPE y_rseg,
+      w_j1bnfdoc    TYPE y_j_1bnfdoc,
+      w_ekko        TYPE y_ekko,
+      w_bkpf        TYPE y_bkpf,
+      w_lfa1        TYPE y_lfa1,
+      w_xml         TYPE y_znf_forn,
+      w_makt        TYPE y_makt,
+      w_j1bnflin    TYPE y_j_1bnflin,
+      w_ekpo        TYPE y_ekpo,
+      w_t001w       TYPE y_t001w,
+      w_ekkn        TYPE y_ekkn,
+      w_essr        TYPE y_essr,
+      w_with_item   TYPE y_with_item,
+      w_j1bnfstx    TYPE y_j_1bnfstx,
+      w_reinf       TYPE y_zreinf,
+      w_bseg        TYPE y_bseg,
+
+*==================================================================================================================================================*
+*variaveis globais
+*==================================================================================================================================================*
+      v_count       TYPE i,
+      v_brcod       TYPE brcde,
+      v_o_table     TYPE REF TO cl_salv_table,
+      v_o_columns   TYPE REF TO cl_salv_columns_table,
+      v_o_column    TYPE REF TO cl_salv_column_table,
+      v_o_header    TYPE REF TO cl_salv_form_layout_grid,
+      v_o_functions TYPE REF TO cl_salv_functions,
+      v_o_display   TYPE REF TO cl_salv_display_settings,
+      v_o_grid      TYPE REF TO cl_salv_form_layout_grid,
+      v_o_label     TYPE REF TO cl_salv_form_label,
+      v_text_1(120) TYPE c,
+      v_text_2(50)  TYPE c.
+*==================================================================================================================================================*
+*Constantes globais
+*==================================================================================================================================================*
+CONSTANTS: c_k  TYPE bseg-koart VALUE 'K',
+           c_is TYPE with_item-witht VALUE 'IS',
+           c_in TYPE with_item-witht VALUE 'IN',
+           c_ir TYPE with_item-witht VALUE 'IR',
+           c_ga TYPE with_item-witht VALUE 'GA'.
+
+
+
+*==================================================================================================================================================*
+*parametros de tela de seleção
+*==================================================================================================================================================*
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
+  SELECT-OPTIONS:
+         s_bukrs  FOR rbkp-bukrs OBLIGATORY,
+         s_werks  FOR rseg-werks OBLIGATORY,
+         s_belnr  FOR rbkp-belnr,
+         s_gjahr  FOR rbkp-gjahr OBLIGATORY,
+         s_xblnr  FOR rbkp-xblnr,
+         s_budat  FOR rbkp-budat OBLIGATORY,
+         s_bldat  FOR rbkp-bldat,
+         s_usnam  FOR rbkp-usnam,
+         s_lifnr  FOR rbkp-lifnr,
+         s_docn   FOR j_1bnfdoc-docnum,
+         s_ebeln  FOR ekko-ebeln,
+         s_belnr2 FOR bkpf-belnr,
+         s_blart  FOR rbkp-blart,
+         s_mwskz  FOR rbkp-mwskz1,
+         s_srvnr  FOR j_1bnflin-srvnr.
+SELECTION-SCREEN END OF BLOCK b1.
+
+*BLOCO 2 -  Selecoes Gerai
+SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002.
+  PARAMETERS:
+* Categoria de Nota Fiscal
+    p_all   TYPE c RADIOBUTTON GROUP rb2 USER-COMMAND zall MODIF ID hid,
+    p_nftp1 TYPE c RADIOBUTTON GROUP rb2 MODIF ID hid.
+  SELECT-OPTIONS:
+         s_categ  FOR rbkp-j_1bnftype.
+  PARAMETERS:
+    p_nftp2 TYPE c RADIOBUTTON GROUP rb2 MODIF ID id2.
+
+SELECTION-SCREEN END OF BLOCK b2.
+
+*BLOCO 2 -  Selecoes Gerai
+SELECTION-SCREEN BEGIN OF BLOCK b3 WITH FRAME TITLE TEXT-003.
+  PARAMETERS:
+* Categoria de Nota Fiscal
+    p_reinr AS CHECKBOX USER-COMMAND ext,
+    p_reinc AS CHECKBOX USER-COMMAND ext,
+    p_pedct AS CHECKBOX USER-COMMAND ext,
+    p_miro  AS CHECKBOX USER-COMMAND ext,
+    p_finc  AS CHECKBOX USER-COMMAND ext.
+
+SELECTION-SCREEN END OF BLOCK b3.
+
+*BLOCO 2 -  Selecoes Gerai
+SELECTION-SCREEN BEGIN OF BLOCK b4 WITH FRAME TITLE TEXT-004.
+  PARAMETERS:
+* Categoria de Nota Fiscal
+    p_atv TYPE c RADIOBUTTON GROUP rb3 MODIF ID id3,
+    p_est TYPE c RADIOBUTTON GROUP rb3 MODIF ID id4,
+    p_tod TYPE c RADIOBUTTON GROUP rb3 MODIF ID id5.
+
+SELECTION-SCREEN END OF BLOCK b4.
+
+AT SELECTION-SCREEN ON p_reinr.
+  PERFORM zf_valida_chkbox.
+
+AT SELECTION-SCREEN ON  p_reinc.
+  PERFORM zf_valida_chkbox.
+
+
+AT SELECTION-SCREEN ON  p_pedct.
+  PERFORM zf_valida_chkbox.
+
+
+AT SELECTION-SCREEN ON  p_miro.
+  PERFORM zf_valida_chkbox.
+
+AT SELECTION-SCREEN ON p_finc.
+  PERFORM zf_valida_chkbox.
+
+AT SELECTION-SCREEN OUTPUT.
+  PERFORM zf_mostra_categorias.
+
+START-OF-SELECTION.
+  IF v_count > 2.
+    MESSAGE TEXT-005 TYPE 'S' DISPLAY LIKE 'E'.
+  ELSE.
+    PERFORM zf_authority_chk.
+    PERFORM zf_seleciona_dados.
+    PERFORM zf_monta_saida.
+    PERFORM zf_display_alv.
+  ENDIF.
+
+*&---------------------------------------------------------------------*
+*&      Form  ZF_VALIDA_CHKBOX
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM zf_valida_chkbox .
+
+  CLEAR v_count.
+
+  IF p_reinc IS NOT INITIAL.
+    v_count = v_count + 1.
+  ENDIF.
+
+  IF p_reinr IS NOT INITIAL.
+    v_count = v_count + 1.
+  ENDIF.
+
+  IF p_pedct IS NOT INITIAL.
+    v_count = v_count + 1.
+  ENDIF.
+
+  IF p_miro IS NOT INITIAL.
+    v_count = v_count + 1..
+  ENDIF.
+
+  IF p_finc IS NOT INITIAL.
+    v_count = v_count + 1.
+  ENDIF.
+
+  IF v_count > 2.
+    MESSAGE TEXT-005 TYPE 'S' DISPLAY LIKE 'E'.
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_MOSTRA_CATEGORIAS
+*&---------------------------------------------------------------------*
+FORM zf_mostra_categorias .
+
+  IF p_nftp1 = ''.
+    LOOP AT SCREEN.
+      IF screen-name = 'S_CATEG'.
+        screen-active = '0'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = '%_S_CATEG_%_APP_%-TEXT'.
+        screen-active = '0'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = 'S_CATEG-LOW'.
+        screen-active = '0'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = 'S_CATEG-HIGH'.
+        screen-active = '0'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = '%_S_CATEG_%_APP_%-VALU_PUSH'.
+        screen-active = '0'.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ELSE.
+    LOOP AT SCREEN.
+      IF screen-name = 'S_CATEG'.
+        screen-active = '1'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = '%_S_CATEG_%_APP_%-TEXT'.
+        screen-active = '1'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = 'S_CATEG-LOW'.
+        screen-active = '1'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = 'S_CATEG-HIGH'.
+        screen-active = '1'.
+        MODIFY SCREEN.
+      ENDIF.
+      IF screen-name = '%_S_CATEG_%_APP_%-VALU_PUSH'.
+        screen-active = '1'.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_SELECIONA_DADOS
+*&---------------------------------------------------------------------*
+FORM zf_seleciona_dados .
+
+  IF p_all = 'X'.
+
+    SELECT  bukrs belnr gjahr lifnr xblnr bldat
+            budat stblg j_1bnftype  usnam blart
+            rmwwr bktxt sgtxt gsber mwskz1 zterm
+            zbd1t zfbdt esrre esrnr esrpz
+      FROM rbkp
+      INTO TABLE t_rbkp
+      WHERE bukrs  IN s_bukrs
+      AND   belnr  IN s_belnr
+      AND   gjahr  IN s_gjahr
+      AND   xblnr  IN s_xblnr
+      AND   budat  IN s_budat
+      AND   bldat  IN s_bldat
+      AND   usnam  IN s_usnam
+      AND   lifnr  IN s_lifnr
+      AND   blart  IN s_blart
+      AND   mwskz1 IN s_mwskz.
+
+  ELSEIF p_nftp1 = 'X'.
+
+    SELECT  bukrs belnr gjahr lifnr xblnr bldat
+           budat stblg j_1bnftype  usnam blart
+           rmwwr bktxt sgtxt gsber mwskz1 zterm
+           zbd1t zfbdt esrre esrnr esrpz
+     FROM rbkp
+     INTO TABLE t_rbkp
+     WHERE bukrs  IN s_bukrs
+     AND   belnr  IN s_belnr
+     AND   gjahr  IN s_gjahr
+     AND   xblnr  IN s_xblnr
+     AND   budat  IN s_budat
+     AND   bldat  IN s_bldat
+     AND   usnam  IN s_usnam
+     AND   lifnr  IN s_lifnr
+     AND   blart  IN s_blart
+     AND   mwskz1 IN s_mwskz
+     AND   j_1bnftype IN s_categ.
+
+  ELSE.
+
+    SELECT  bukrs belnr gjahr lifnr xblnr bldat
+           budat stblg j_1bnftype  usnam blart
+           rmwwr bktxt sgtxt gsber mwskz1 zterm
+           zbd1t zfbdt esrre esrnr esrpz
+     FROM rbkp
+     INTO TABLE t_rbkp
+     WHERE bukrs  IN s_bukrs
+     AND   belnr  IN s_belnr
+     AND   gjahr  IN s_gjahr
+     AND   xblnr  IN s_xblnr
+     AND   budat  IN s_budat
+     AND   bldat  IN s_bldat
+     AND   usnam  IN s_usnam
+     AND   lifnr  IN s_lifnr
+     AND   blart  IN s_blart
+     AND   mwskz1 IN s_mwskz
+     AND   j_1bnftype = ''.
+
+  ENDIF.
+
+  LOOP AT t_rbkp ASSIGNING FIELD-SYMBOL(<fs_rbkp>).
+
+    CONCATENATE <fs_rbkp>-belnr <fs_rbkp>-gjahr INTO <fs_rbkp>-awkey.
+
+  ENDLOOP.
+
+  IF p_atv = 'X'.
+
+    DELETE t_rbkp WHERE stblg IS NOT INITIAL.
+
+  ELSEIF p_est = 'X'.
+
+    DELETE t_rbkp WHERE stblg IS INITIAL.
+
+  ENDIF.
+
+  IF t_rbkp IS NOT INITIAL.
+
+    SELECT belnr ebeln ebelp werks matnr wrbtr
+      FROM rseg
+      INTO TABLE t_rseg
+      FOR ALL ENTRIES IN t_rbkp
+      WHERE belnr = t_rbkp-belnr
+      AND   bukrs IN s_bukrs
+      AND   gjahr IN s_gjahr
+      AND   werks IN s_werks.
+
+    SELECT belnr docnum
+      FROM j_1bnfdoc
+      INTO TABLE t_j1bnfdoc
+      FOR ALL ENTRIES IN t_rbkp
+      WHERE belnr = t_rbkp-belnr
+      AND bukrs  IN s_bukrs
+      AND gjahr  IN s_gjahr
+      AND docnum IN s_docn.
+
+    IF t_rseg IS NOT INITIAL.
+
+      SELECT ebeln aedat lifnr ernam bsart
+             zterm
+        FROM ekko
+        INTO TABLE t_ekko
+        FOR ALL ENTRIES IN t_rseg
+        WHERE ebeln = t_rseg-ebeln
+        AND bukrs  IN s_bukrs
+        AND ebeln  IN s_ebeln.
+
+    ENDIF.
+
+    SELECT belnr stblg awkey
+      FROM bkpf
+      INTO TABLE t_bkpf
+      FOR ALL ENTRIES IN t_rbkp
+      WHERE awkey = t_rbkp-awkey
+      AND   bukrs IN s_bukrs
+      AND   gjahr IN s_gjahr
+      AND   belnr IN s_belnr2.
+
+    IF t_bkpf[] IS NOT INITIAL.
+
+*---> 29/09/2023 - Migração S4 – EL
+*      SELECT belnr augbl gsber
+*      FROM bseg
+*      INTO TABLE t_bseg
+*      FOR ALL ENTRIES IN t_bkpf
+*      WHERE belnr = t_bkpf-belnr
+*      AND   bukrs IN s_bukrs
+*      AND   gjahr IN s_gjahr
+*      AND   koart = c_k.
+      DATA: t_fields   TYPE fagl_t_field,
+            t_bseg_aux TYPE TABLE OF bseg.
+
+      t_fields = VALUE #( ( line = 'BELNR' )
+                          ( line = 'AUGBL' )
+                          ( line = 'GSBER' )
+                          ( line = 'BUKRS' )
+                          ( line = 'GJAHR' )
+                          ( line = 'KOART' )
+                          ).
+
+      CALL FUNCTION 'FAGL_GET_BSEG_FOR_ALL_ENTRIES'
+        EXPORTING
+          it_for_all_entries = t_bkpf
+          i_where_clause     = |BELNR = IT_FOR_ALL_ENTRIES-BELNR|
+          it_fieldlist       = t_fields
+        IMPORTING
+          et_bseg            = t_bseg_aux
+        EXCEPTIONS
+          not_found          = 1.
+
+      DELETE t_bseg_aux WHERE bukrs NOT IN s_bukrs OR
+                              gjahr NOT IN s_gjahr OR
+                              koart NE c_k.
+
+      IF sy-subrc = 0 AND lines( t_bseg_aux ) > 0.
+        MOVE-CORRESPONDING t_bseg_aux[] TO t_bseg[].
+        sy-dbcnt = lines( t_bseg ).
+      ELSE.
+        sy-subrc = 4.
+        sy-dbcnt = 0.
+      ENDIF.
+*<--- 29/09/2023 - Migração S4 – EL
+
+    ENDIF.
+
+  ELSE.
+
+    MESSAGE 'Não há dados para a seleção informada' TYPE 'S' DISPLAY LIKE 'E'.
+
+  ENDIF.
+
+  IF p_miro = 'X'.
+
+    CONCATENATE 'MIRO' '' INTO v_text_2 SEPARATED BY space.
+
+    IF t_rbkp IS NOT INITIAL.
+
+      SELECT lifnr regio ort01
+       FROM lfa1
+       INTO TABLE t_lfa1
+       FOR ALL ENTRIES IN t_rbkp
+       WHERE lifnr = t_rbkp-lifnr.
+
+      SELECT belnr xml_chave_nfe
+        FROM ztbmm_nf_forn_cb
+        INTO TABLE t_xml
+        FOR ALL ENTRIES IN t_rbkp
+        WHERE belnr = t_rbkp-belnr.
+
+    ENDIF.
+
+    IF t_rseg IS NOT INITIAL.
+
+      SELECT matnr maktx
+        FROM makt
+        INTO TABLE t_makt
+        FOR ALL ENTRIES IN t_rseg
+        WHERE matnr = t_rseg-matnr.
+
+    ENDIF.
+
+    IF t_j1bnfdoc IS NOT INITIAL.
+
+      SELECT docnum cfop srvnr taxsi5 taxsi4 nbm
+        FROM j_1bnflin
+        INTO TABLE t_j1bnflin
+        FOR ALL ENTRIES IN t_j1bnfdoc
+        WHERE docnum = t_j1bnfdoc-docnum
+        AND srvnr IN s_srvnr.
+
+    ENDIF.
+
+  ENDIF.
+
+  IF p_pedct = 'X'.
+
+    CONCATENATE v_text_2 'Pedido de Compra' INTO v_text_2 SEPARATED BY ' | '.
+
+    IF t_ekko IS NOT INITIAL.
+
+      SELECT  ebeln ebelp werks txz01 mwskz netpr
+      FROM ekpo
+      INTO TABLE t_ekpo
+      FOR ALL ENTRIES IN t_ekko
+      WHERE ebeln = t_ekko-ebeln
+        AND bukrs IN s_bukrs.
+
+      IF t_ekpo IS NOT INITIAL.
+
+        SELECT werks regio ort01
+          FROM t001w
+          INTO TABLE t_t001w
+          FOR ALL ENTRIES IN t_ekpo
+          WHERE werks = t_ekpo-werks.
+
+      ENDIF.
+    ENDIF.
+
+    IF t_rseg IS NOT INITIAL.
+
+      SELECT ebeln kostl
+        FROM ekkn
+        INTO TABLE t_ekkn
+        FOR ALL ENTRIES IN t_rseg
+        WHERE ebeln = t_rseg-ebeln.
+
+
+      SELECT ebeln ebelp lblni erdat ernam lwert
+        FROM essr
+        INTO TABLE t_essr
+        FOR ALL ENTRIES IN t_rseg
+        WHERE ebeln = t_rseg-ebeln.
+
+    ENDIF.
+
+  ENDIF.
+
+  IF p_finc = 'X'.
+
+    CONCATENATE v_text_2 'Financeiro' INTO v_text_2 SEPARATED BY ' | '.
+
+    IF t_bkpf IS NOT INITIAL.
+
+      SELECT belnr witht wt_withcd
+             wt_qsshh wt_qbshb wt_qbshh wt_qsfhh
+        FROM with_item
+        INTO TABLE t_with_item
+        FOR ALL ENTRIES IN t_bkpf
+        WHERE belnr = t_bkpf-belnr
+        AND   bukrs IN s_bukrs
+        AND   gjahr IN s_gjahr
+        AND ( witht = c_is OR witht = c_in
+           OR witht = c_ir OR witht = c_ga ).
+
+    ENDIF.
+
+    IF t_j1bnfdoc IS NOT INITIAL.
+
+      SELECT  docnum base
+              rate taxval
+        FROM j_1bnfstx
+        INTO TABLE t_j1bnfstx
+        FOR ALL ENTRIES IN t_j1bnfdoc
+        WHERE docnum = t_j1bnfdoc-docnum.
+
+    ENDIF.
+
+  ENDIF.
+
+  IF p_reinr = 'X' OR  p_reinc = 'X'.
+
+    IF p_reinr = 'X'.
+      CONCATENATE v_text_2 'Reinf resumo' INTO v_text_2 SEPARATED BY ' | '.
+    ELSE.
+      CONCATENATE v_text_2 'Reinf completo' INTO v_text_2 SEPARATED BY ' | '.
+    ENDIF.
+
+    SELECT belnr tpservico vlrbruto vlbaseret vlrretencao
+           vlrretsub vlrnretprinc nrprocretprinc vlrservicos15
+           vlrservicos20 vlrservicos25 vlradicional cno
+           tpcno vlrbaseretir vlrretencaoir vlrnretir
+           nrprocretir vlbaseretpis vlrretencaopis vlrnretpis
+           nrprocretbasepis nrprocretpis vlbaseretcof vlrretencaocof
+           vlrnretcof nrprocretbasecof nrprocretcof vlbaseretcsll
+           vlrretencaocsll vlrnretcsll nrprocretbasecsll nrprocretcsll
+      FROM zreinf_r2010info
+      INTO TABLE t_zreinf
+      FOR ALL ENTRIES IN t_rbkp
+      WHERE belnr = t_rbkp-belnr
+      AND   bukrs IN s_bukrs
+      AND   gjahr IN s_gjahr.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_MONTA_SAIDA
+*&---------------------------------------------------------------------*
+FORM zf_monta_saida .
+
+  LOOP AT t_rseg INTO DATA(w_rseg).
+
+    CLEAR w_j1bnfdoc.
+    CLEAR w_ekko.
+    CLEAR w_lfa1.
+    CLEAR w_xml.
+    CLEAR w_makt.
+    CLEAR w_j1bnflin.
+    CLEAR w_t001w.
+    CLEAR w_ekpo.
+    CLEAR w_ekkn.
+    CLEAR w_essr.
+    CLEAR w_bkpf.
+    CLEAR w_bseg.
+    CLEAR w_with_item.
+    CLEAR w_j1bnfstx.
+    CLEAR w_reinf.
+
+    w_alv-werks = w_rseg-werks.
+    w_alv-matnr = w_rseg-matnr.
+
+    READ TABLE t_rbkp INTO w_rbkp
+                      WITH KEY belnr = w_rseg-belnr.
+    IF sy-subrc = 0.
+
+      w_alv-bukrs        = w_rbkp-bukrs.
+      w_alv-belnr	       = w_rbkp-belnr.
+      w_alv-gjahr	       = w_rbkp-gjahr.
+      w_alv-lifnr	       = w_rbkp-lifnr.
+      w_alv-xblnr	       = w_rbkp-xblnr.
+      w_alv-bldat	       = w_rbkp-bldat.
+      w_alv-budat	       = w_rbkp-budat.
+      w_alv-stblg	       = w_rbkp-stblg.
+      w_alv-j_1bnftype   = w_rbkp-j_1bnftype.
+      w_alv-usnam	       = w_rbkp-usnam.
+      w_alv-blart	       = w_rbkp-blart.
+      w_alv-rmwwr	       = w_rbkp-rmwwr.
+      w_alv-bktxt	       = w_rbkp-bktxt.
+      w_alv-sgtxt	       = w_rbkp-sgtxt.
+      w_alv-gsber	       = w_rbkp-gsber.
+      w_alv-mwskz	       = w_rbkp-mwskz.
+      w_alv-zbd1t	       = w_rbkp-zbd1t.
+      w_alv-zfbdt	       = w_rbkp-zfbdt.
+
+    ENDIF.
+
+    READ TABLE t_j1bnfdoc INTO w_j1bnfdoc
+                          WITH KEY belnr = w_rseg-belnr.
+    IF sy-subrc = 0.
+      w_alv-docnum = w_j1bnfdoc-docnum.
+    ENDIF.
+
+    READ TABLE t_ekko INTO w_ekko
+                      WITH KEY ebeln = w_rseg-ebeln.
+    IF sy-subrc = 0.
+
+      w_alv-ebeln  =  w_ekko-ebeln.
+      w_alv-lifnr2 =  w_ekko-lifnr.
+      w_alv-ernam  =  w_ekko-ernam.
+      w_alv-bsart  =  w_ekko-bsart.
+      w_alv-zterm  =  w_ekko-zterm.
+      w_alv-zterm2 =  w_ekko-zterm.
+
+    ENDIF.
+
+    READ TABLE t_lfa1 INTO w_lfa1
+                      WITH KEY lifnr = w_rbkp-lifnr.
+    IF sy-subrc = 0.
+      w_alv-ort01 = w_lfa1-ort01.
+      w_alv-regio = w_lfa1-regio.
+    ENDIF.
+
+    READ TABLE t_xml INTO w_xml
+                     WITH KEY belnr = w_rbkp-belnr.
+    IF sy-subrc = 0.
+      w_alv-xml_chv = w_xml-xml_chave_nfe.
+    ENDIF.
+
+    READ TABLE t_makt INTO w_makt
+                      WITH KEY matnr = w_rseg-matnr.
+    IF sy-subrc = 0.
+      w_alv-maktx = w_makt-maktx.
+    ENDIF.
+
+
+    CALL FUNCTION 'J_1B_BARCODE_REVERT'
+      EXPORTING
+        iv_esrre            = w_rbkp-esrre
+        iv_esrnr            = w_rbkp-esrnr
+        iv_esrpz            = w_rbkp-esrpz
+* ---> S4 Migration - 28/09/2023 - NS
+*       iv_dmbtr            = w_rseg-wrbtr
+        iv_dmbtr            = CONV dmbtr( w_rseg-wrbtr )
+*<--- S4 Migration - 28/09/2023 - NS
+      IMPORTING
+        ev_reverted_barcode = v_brcod.
+
+    IF sy-subrc = 0.
+      w_alv-brcde = v_brcod.
+    ENDIF.
+
+    w_alv-wrbtr = w_rseg-wrbtr.
+
+    READ TABLE t_j1bnflin INTO w_j1bnflin
+                          WITH KEY docnum = w_j1bnfdoc-docnum.
+    IF sy-subrc = 0.
+
+      w_alv-cfop   = w_j1bnflin-cfop.
+      w_alv-srvnr  = w_j1bnflin-srvnr.
+      w_alv-taxsi5 = w_j1bnflin-taxsi5.
+      w_alv-taxs14 = w_j1bnflin-taxsi4.
+      w_alv-nbm    = w_j1bnflin-nbm.
+
+    ENDIF.
+
+    READ TABLE t_t001w INTO w_t001w
+                       WITH KEY werks = w_rseg-werks.
+    IF sy-subrc = 0.
+      w_alv-regio_2 = w_t001w-regio.
+      w_alv-ort01_2 = w_t001w-ort01.
+    ENDIF.
+
+    READ TABLE t_ekpo INTO w_ekpo
+                       WITH KEY ebeln = w_rseg-ebeln.
+    IF sy-subrc = 0.
+
+      w_alv-mwskz  = w_ekpo-mwskz.
+      w_alv-mwskz2 = w_ekpo-mwskz.
+      w_alv-ebelp  = w_ekpo-ebelp.
+      w_alv-txz01  = w_ekpo-txz01.
+      w_alv-netpr  = w_ekpo-netpr.
+
+    ENDIF.
+
+    READ TABLE t_ekkn INTO w_ekkn
+                      WITH KEY ebeln = w_rseg-ebeln.
+    IF sy-subrc = 0.
+      w_alv-kostl = w_ekkn-kostl.
+    ENDIF.
+
+    READ TABLE t_essr INTO w_essr
+                      WITH KEY ebeln = w_rseg-ebeln
+                               ebelp = w_rseg-ebelp.
+    IF sy-subrc = 0.
+
+      w_alv-lblni  = w_essr-lblni.
+      w_alv-erdat  = w_essr-erdat.
+      w_alv-ernam2 = w_essr-ernam.
+      w_alv-lwert  = w_essr-lwert.
+
+    ENDIF.
+
+    READ TABLE t_bkpf INTO w_bkpf
+                      WITH KEY awkey = w_rbkp-awkey.
+    IF sy-subrc = 0.
+
+      w_alv-belnr2 = w_bkpf-belnr.
+      w_alv-stblg2 = w_bkpf-stblg.
+
+      READ TABLE t_bseg INTO w_bseg
+                          WITH KEY belnr = w_bkpf-belnr.
+      IF sy-subrc = 0.
+
+        w_alv-augbl = w_bseg-augbl.
+
+        IF w_alv-gsber IS INITIAL.
+          w_alv-gsber = w_bseg-gsber.
+        ENDIF.
+
+      ENDIF.
+
+    ENDIF.
+
+    READ TABLE t_with_item INTO w_with_item
+                           WITH KEY belnr = w_bkpf-belnr
+                                    witht = c_ga.
+    IF sy-subrc = 0.
+
+      w_alv-witht     = w_with_item-witht.
+      w_alv-wt_qbshb  = w_with_item-wt_qbshh.
+      w_alv-wt_qsshh  = w_with_item-wt_qsfhh.
+      w_alv-wt_withcd = w_with_item-wt_withcd.
+
+      DELETE TABLE t_with_item FROM w_with_item.
+
+    ENDIF.
+
+    IF w_alv-witht IS INITIAL.
+
+      READ TABLE t_with_item INTO w_with_item
+                           WITH KEY belnr = w_bkpf-belnr
+                                    witht = c_ir.
+      IF sy-subrc = 0.
+
+        w_alv-witht     = w_with_item-witht.
+        w_alv-wt_qbshb  = w_with_item-wt_qbshh.
+        w_alv-wt_qsshh  = w_with_item-wt_qsshh.
+        w_alv-wt_withcd = w_with_item-wt_withcd.
+
+        DELETE TABLE t_with_item FROM w_with_item.
+
+      ENDIF.
+
+    ENDIF.
+
+    IF w_alv-witht IS INITIAL.
+
+      READ TABLE t_with_item INTO w_with_item
+                           WITH KEY belnr = w_bkpf-belnr
+                                    witht = c_in.
+      IF sy-subrc = 0.
+
+        w_alv-witht     = w_with_item-witht.
+        w_alv-wt_qbshb  = w_with_item-wt_qbshh.
+        w_alv-wt_qsshh  = w_with_item-wt_qsshh.
+        w_alv-wt_withcd = w_with_item-wt_withcd.
+
+        DELETE TABLE t_with_item FROM w_with_item.
+
+      ENDIF.
+
+    ENDIF.
+
+    IF w_alv-witht IS INITIAL.
+
+      READ TABLE t_with_item INTO w_with_item
+                           WITH KEY belnr = w_bkpf-belnr
+                                    witht = c_is.
+      IF sy-subrc = 0.
+
+        w_alv-witht     = w_with_item-witht.
+        w_alv-wt_qbshb  = w_with_item-wt_qbshh.
+        w_alv-wt_qsshh  = w_with_item-wt_qsshh.
+        w_alv-wt_withcd = w_with_item-wt_withcd.
+
+        DELETE TABLE t_with_item FROM w_with_item.
+
+      ENDIF.
+
+    ENDIF.
+
+    READ TABLE t_j1bnfstx INTO w_j1bnfstx
+                          WITH KEY docnum = w_j1bnfdoc-docnum.
+
+    IF sy-subrc = 0.
+
+      w_alv-base   =  w_j1bnfstx-base.
+      w_alv-rate   =  w_j1bnfstx-rate.
+      w_alv-taxval =  w_j1bnfstx-taxval.
+
+    ENDIF.
+
+    READ TABLE t_zreinf INTO w_reinf
+                        WITH KEY belnr = w_rbkp-belnr.
+    IF sy-subrc = 0.
+
+      w_alv-tpservico          = w_reinf-tpservico.
+      w_alv-vlrbruto           = w_reinf-vlrbruto.
+      w_alv-vlbaseret          = w_reinf-vlbaseret.
+      w_alv-vlrretencao        = w_reinf-vlrretencao.
+      w_alv-vlrretsub          = w_reinf-vlrretsub.
+      w_alv-vlrnretprinc       = w_reinf-vlrnretprinc.
+      w_alv-nrprocretprinc     = w_reinf-nrprocretprinc.
+      w_alv-vlrservicos15      = w_reinf-vlrservicos15.
+      w_alv-vlrservicos20      = w_reinf-vlrservicos20.
+      w_alv-vlrservicos25      = w_reinf-vlrservicos25.
+      w_alv-vlradicional       = w_reinf-vlradicional.
+      w_alv-cno                = w_reinf-cno.
+      w_alv-tpcno              = w_reinf-tpcno.
+      w_alv-vlrbaseretir       = w_reinf-vlrbaseretir.
+      w_alv-vlrretencaoir      = w_reinf-vlrretencaoir.
+      w_alv-vlrnretir          = w_reinf-vlrnretir.
+      w_alv-nrprocretir        = w_reinf-nrprocretir.
+      w_alv-vlbaseretpis       = w_reinf-vlbaseretpis.
+      w_alv-vlrretencaopis     = w_reinf-vlrretencaopis.
+      w_alv-vlrnretpis         = w_reinf-vlrnretpis.
+      w_alv-nrprocretbasepis   = w_reinf-nrprocretbasepis.
+      w_alv-nrprocretpis       = w_reinf-nrprocretpis.
+      w_alv-vlbaseretcof       = w_reinf-vlbaseretcof.
+      w_alv-vlrretencaocof     = w_reinf-vlrretencaocof.
+      w_alv-vlrnretcof         = w_reinf-vlrnretcof.
+      w_alv-nrprocretbasecof   = w_reinf-nrprocretbasecof.
+      w_alv-nrprocretcof       = w_reinf-nrprocretcof.
+      w_alv-vlbaseretcsll      = w_reinf-vlbaseretcsll.
+      w_alv-vlrretencaocsll    = w_reinf-vlrretencaocsll.
+      w_alv-vlrnretcsll        = w_reinf-vlrnretcsll.
+      w_alv-nrprocretbasecsll  = w_reinf-nrprocretbasecsll.
+      w_alv-nrprocretcsll      = w_reinf-nrprocretcsll.
+
+    ENDIF.
+
+    APPEND w_alv TO t_alv.
+    CLEAR w_alv.
+
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM zf_display_alv .
+
+  DATA: l_dtini(10) TYPE c,
+        l_dtfim(10) TYPE c.
+
+  TRY.
+      CALL METHOD cl_salv_table=>factory
+        IMPORTING
+          r_salv_table = v_o_table
+        CHANGING
+          t_table      = t_alv.
+    CATCH cx_salv_msg.
+  ENDTRY.
+
+  v_o_display = v_o_table->get_display_settings( ) .
+  IF ( v_o_display IS BOUND ) .
+    v_o_display->set_striped_pattern( cl_salv_display_settings=>true ) .
+  ENDIF .
+
+  v_o_columns = v_o_table->get_columns( ).
+  v_o_columns->set_optimize( abap_true ).
+
+  v_o_table->set_screen_status(
+    EXPORTING
+      report = sy-repid
+      pfstatus = 'Z_STANDARD'
+      set_functions = v_o_table->c_functions_all
+      ).
+
+  v_o_functions = v_o_table->get_functions( ).
+  v_o_functions->set_all( ).
+
+  PERFORM zf_fcat_config.
+
+* Create an instance
+  CREATE OBJECT v_o_grid.
+
+  CALL FUNCTION 'CONVERSION_EXIT_PDATE_OUTPUT'
+    EXPORTING
+      input  = s_budat-low
+    IMPORTING
+      output = l_dtini.
+
+  IF s_budat-high IS NOT INITIAL.
+
+    CALL FUNCTION 'CONVERSION_EXIT_PDATE_OUTPUT'
+      EXPORTING
+        input  = s_budat-high
+      IMPORTING
+        output = l_dtfim.
+
+    CONCATENATE 'Período: ' l_dtini 'à' l_dtfim INTO v_text_1 SEPARATED BY ' '.
+
+  ELSE.
+
+    CONCATENATE 'Período: ' l_dtini INTO v_text_1 SEPARATED BY ' '.
+
+  ENDIF.
+
+  CONCATENATE 'Tipo de Relatório: ' v_text_2 INTO v_text_2 SEPARATED BY ' '.
+
+* 1st Row in Header
+  v_o_label = v_o_grid->create_label(
+    row     = 1
+    column  = 1
+    text    = v_text_2 ).
+
+* 2nd Row in Header
+  v_o_label = v_o_grid->create_label(
+    row     = 2
+    column  = 1
+    text    = v_text_1 ).
+
+* Set Top OF Page to the ALV
+  CALL METHOD v_o_table->set_top_of_list
+    EXPORTING
+      value = v_o_grid.
+
+  CALL METHOD v_o_table->display.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_FCAT_CONFIG
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM zf_fcat_config .
+
+  IF p_miro = ''.
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'REGIO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ORT01' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'BLART' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'XML_CHV' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'RMWWR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'BKTXT' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'SGTXT' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'GSBER' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'MATNR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'MAKTX' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'MWSKZ' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'WRBTR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ZTERM' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ZBD1T' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ZFBDT' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'BRCDE' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'CFOP' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'SRVNR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'TAXSI5' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'TAXS14' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NBM' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+  ENDIF.
+*-------------------------------------------------------------------------------------
+
+  IF p_pedct = ''.
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'REGIO_2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ORT01_2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'LIFNR2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ERNAM' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'BSART' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'EBELP' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'TXZ01' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NETPR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ZTERM2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'KOSTL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'LBLNI' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ERDAT' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'ERNAM2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'LWERT' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'MWSKZ2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+  ENDIF.
+
+*-------------------------------------------------------------------------------
+
+  IF p_finc = ''.
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'AUGBL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'STBLG2' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'WITHT' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'WT_WITHCD' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'WT_QSSHH' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'WT_QBSHB' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'BASE' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'RATE' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'TAXVAL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+  ENDIF.
+
+  IF p_reinc = '' AND p_reinr = ''.
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'TPSERVICO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRBRUTO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLBASERET' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRRETENCAO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRRETSUB' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRNRETPRINC' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETPRINC' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRSERVICOS15' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRSERVICOS20' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRSERVICOS25' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRADICIONAL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'CNO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'TPCNO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRBASERETIR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRRETENCAOIR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRNRETIR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETIR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLBASERETPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRRETENCAOPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRNRETPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETBASEPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLBASERETCO' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRRETENCAOCOF' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRNRETCOF' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETBASECOF' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETCOF' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLBASERETCSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRRETENCAOCSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRNRETCSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETBASECSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETCSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+  ELSEIF p_reinc = '' AND p_reinr = 'X'.
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRSERVICOS15' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRSERVICOS20' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRSERVICOS25' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'VLRADICIONAL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETIR' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETBASEPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETPIS' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETBASECOF' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETCOF' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETBASECSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+    TRY.
+        v_o_column ?= v_o_columns->get_column( 'NRPROCRETCSLL' ).
+      CATCH cx_salv_not_found.
+    ENDTRY.
+
+    v_o_column->set_visible( value  = if_salv_c_bool_sap=>false ).
+
+  ENDIF.
+
+  v_o_display = v_o_table->get_display_settings( ).
+  v_o_display->set_list_header( 'Relatório Servico-Pedido x MIRO X Reinf' ).
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_AUTHORITY_CHK
+*&---------------------------------------------------------------------*
+FORM zf_authority_chk .
+
+  SELECT bukrs
+        FROM t001
+        INTO TABLE @DATA(t_t001)
+        WHERE bukrs IN @s_bukrs.
+
+  IF sy-subrc IS INITIAL.
+    LOOP AT t_t001 INTO DATA(l_bukrs).
+
+      AUTHORITY-CHECK OBJECT 'M_MATE_BUK'
+                 ID 'BUKRS'  FIELD l_bukrs
+                 ID 'ACTVT'  FIELD '03'.
+
+      IF sy-subrc IS NOT INITIAL.
+        MESSAGE s368(00) DISPLAY LIKE sy-abcde+4(1) WITH TEXT-e02 l_bukrs.
+        LEAVE LIST-PROCESSING.
+      ENDIF.
+    ENDLOOP.
+  ELSE.
+    " Empresa não encontrada.
+    MESSAGE TEXT-e01 TYPE 'S' DISPLAY LIKE 'E'.
+    LEAVE LIST-PROCESSING.
+  ENDIF.
+
+ENDFORM.
